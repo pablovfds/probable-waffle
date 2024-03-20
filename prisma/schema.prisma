@@ -1,0 +1,172 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 Int                @id @default(autoincrement())
+  code               String             @unique
+  name               String?
+  password           String?
+  photo              String?
+  surveyCount        Int                @default(0)
+  doneSurveys        Int                @default(0)
+  deleted            Boolean?           @default(false)
+  surveys            Survey[]
+  expiresAt          DateTime?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  interviews         Interview[]
+  question_responses QuestionResponse[]
+}
+
+model Place {
+  id             Int         @id @default(autoincrement())
+  name           String?
+  longitude      Float?
+  latitude       Float?
+  radius         Float?
+  parentId       Int?
+  parent         Place?      @relation("PlaceToPlace", fields: [parentId], references: [id])
+  children       Place[]     @relation("PlaceToPlace")
+  surveys        Survey[]
+  interviews     Interview[]
+  childrenQuotas Quota[]
+  deleted        Boolean?    @default(false)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model Survey {
+  id             Int         @id @default(autoincrement())
+  name           String?
+  interviewTotal Int?
+  interviewDone  Int?
+  initialDate    DateTime?
+  finalDate      DateTime?
+  withBoundary   Boolean?
+  withAudio      Boolean?
+  goalTotal      Int?
+  goalCount      Int?
+  deleted        Boolean?    @default(false)
+  minDistance    Float?
+  placeId        Int?
+  place          Place?      @relation(fields: [placeId], references: [id])
+  user           User?       @relation(fields: [userId], references: [id])
+  userId         Int?
+  interviews     Interview[]
+  sections       Section[]
+  quotas         Quota[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model Interview {
+  id              Int                @id @default(autoincrement())
+  surveyId        Int?
+  userId          Int?
+  status          Int?
+  collected_at    DateTime?
+  longitude       Float?
+  latitude        Float?
+  audioUrl        String?
+  user            User?              @relation(fields: [userId], references: [id])
+  survey          Survey?            @relation(fields: [surveyId], references: [id])
+  duration        Int?
+  responses       QuestionResponse[]
+  deleted         Boolean?           @default(false)
+  rejection_cause String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  place           Place?             @relation(fields: [placeId], references: [id])
+  placeId         Int?
+}
+
+model Section {
+  id        Int        @id @default(autoincrement())
+  name      String?
+  resume    String?
+  surveyId  Int?
+  survey    Survey?    @relation(fields: [surveyId], references: [id])
+  questions Question[]
+  deleted   Boolean?   @default(false)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model Question {
+  id            Int                       @id @default(autoincrement())
+  description   String?
+  type          String? // text, number, date, time, scale, checkbox, multiselect, grid-checkbox, grid-multiselect, photo, video, sorted
+  resume        String?
+  minimumValue  Int?
+  maximumValue  Int?
+  required      Boolean?
+  withAudio     Boolean?
+  withDisk      Boolean?
+  sectionId     Int?
+  section       Section?                  @relation(fields: [sectionId], references: [id])
+  responses     QuestionResponse[]
+  parent        Question?                 @relation("QuestionToQuestion", fields: [parentId], references: [id])
+  parentId      Int?
+  gridQuestions Question[]                @relation("QuestionToQuestion")
+  deleted       Boolean?                  @default(false)
+  createdAt     DateTime                  @default(now())
+  updatedAt     DateTime                  @updatedAt
+  alternatives  AlternativesOnQuestions[]
+}
+
+model Alternative {
+  id                Int                       @id @default(autoincrement())
+  value             String?
+  questions         AlternativesOnQuestions[]
+  questionResponses QuestionResponse[]
+  deleted           Boolean?                  @default(false)
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+}
+
+model AlternativesOnQuestions {
+  questionId    Int
+  question      Question?    @relation(fields: [questionId], references: [id])
+  alternativeId Int
+  alternative   Alternative? @relation(fields: [alternativeId], references: [id])
+  deleted       Boolean?     @default(false)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@id([questionId, alternativeId])
+}
+
+model QuestionResponse {
+  id           Int           @id @default(autoincrement())
+  value        String?
+  alternatives Alternative[]
+  questionId   Int?
+  question     Question?     @relation(fields: [questionId], references: [id])
+  interviewId  Int?
+  interview    Interview?    @relation(fields: [interviewId], references: [id])
+  userId       Int?
+  user         User?         @relation(fields: [userId], references: [id])
+  deleted      Boolean?      @default(false)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Quota {
+  surveyId  Int
+  survey    Survey @relation(fields: [surveyId], references: [id])
+  placeId   Int
+  place     Place  @relation(fields: [placeId], references: [id])
+  progTotal Int?
+  progCount Int?
+
+  @@id([surveyId, placeId])
+}

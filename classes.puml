@@ -1,0 +1,166 @@
+@startuml "Order Taking Classes"
+
+class User {
+    id: int <<generated>>
+    code: string
+    name: string
+    password: string
+    photo: string
+    deleted: boolean
+    expiresAt: datetime
+    createdAt: datetime
+    updatedAt: datetime
+    surveys: Survey[]
+    interviews: Interview[]
+}
+
+class Survey {
+  id: int <<generated>>
+  name: string
+  interviewDone: int
+  interviewTotal: int
+  initialDate: datetime
+  finalDate: datetime
+  withBoundary: boolean
+  withAudio: boolean
+  goalTotal: int
+  goalCount: int
+  deleted: boolean
+  minDistance: float
+  createdAt: datetime
+  updatedAt: datetime
+  placeId: int <<FK>>
+  userId: int <<FK>>
+  sections: Section[]
+  interviews: Interview[]
+}
+
+class Section {
+  id: int <<generated>>
+  name: string
+  resume: string
+  deleted: boolean
+  createdAt: datetime
+  updatedAt: datetime
+  questions: Question[]
+  surveyId: int <<FK>>
+}
+
+class Question {
+  id: int <<generated>>
+  description: string
+  type: QuestionType
+  resume: string
+  maximumValue: int
+  minimumValue: int
+  withAudio: boolean
+  required: boolean
+  deleted: boolean
+  createdAt: datetime
+  updatedAt: datetime
+  alternatives: AlternativesOnQuestions[]
+  responses: QuestionResponse[]
+  gridQuestions: Question[]
+  sectionId: int <<FK>>
+}
+
+enum QuestionType {
+  TEXT
+  NUMBER
+  DATE
+  TIME
+  SINGLE
+  MULTIPLE
+  GRID
+}
+
+class Alternative {
+  id: int <<generated>>
+  value: string
+  deleted: boolean
+  createdAt: datetime
+  updatedAt: datetime
+  questions: AlternativesOnQuestions[]
+}
+
+class QuestionResponse {
+  id: int <<generated>>
+  value: string
+  deleted: boolean
+  createdAt: datetime
+  updatedAt: datetime
+  questionId: int  <<FK>>
+  interviewId: int  <<FK>>
+  userId: int  <<FK>>
+}
+
+class Place {
+  id: int <<generated>>
+  name: string
+  address: string
+  latitude: float
+  longitude: float
+  deleted: boolean
+  createdAt: datetime
+  updatedAt: datetime
+  parentId: int <<FK>>
+  children: Place[]
+  surveys: Survey[]
+  interviews: Interview[]
+}
+
+class Interview {
+  id: int <<generated>>
+  status: InterviewStatus
+  collectedAt: datetime
+  longitude: float
+  latitude: float
+  audioUrl: string
+  duration: int
+  rejectionCause: string
+  deleted: boolean
+  createdAt: datetime
+  updatedAt: datetime
+  surveyId: int <<FK>>
+  placeId: int <<FK>>
+  userId: int <<FK>>
+}
+
+enum InterviewStatus {
+  DRAFT
+  COLLECTED
+  AUDITED
+  REJECTED
+}
+
+class AlternativesOnQuestions {
+  description: string
+  deleted: boolean
+  createdAt: datetime
+  updatedAt: datetime
+  questionId: int <<FK>>
+  alternativeId: int <<FK>>
+}
+
+User "1" *-- "0..*" Survey : surveys > 
+User "1" *-- "0..*" Interview : interviews >
+Survey "1" *-- "0..*" Interview : interviews >
+Survey "0..*" *-- "1" Place : place >
+Survey "1" *-- "0..*" Section : sections
+Section "1" *-- "0..*" Question : questions
+Question "1..*" o-- "0..*" Alternative 
+  (Question, Alternative) . AlternativesOnQuestions
+Question "1" o-- "n" QuestionResponse : responses
+Question "0..*" *-- "1" Question : gridQuestions
+Question *-- QuestionType
+Place "1" *-- "0..*" Place : children
+Place "1" *-- "0..*" Survey : surveys
+Place "1" *-- "0..*" Interview : interviews
+Interview "1" *-- "0..*" QuestionResponse : responses
+Interview "1" *-- "0..*" Survey : survey
+Interview "1" *-- "0..*" Place : place
+Interview "1" *-- "0..*" User : user
+Interview *-- InterviewStatus
+
+
+@endstartuml
