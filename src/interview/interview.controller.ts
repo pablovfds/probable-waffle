@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  Delete,
-  Query,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Query } from '@nestjs/common';
 import { InterviewService } from './interview.service';
 import { CreateInterviewDto } from './dto/create-interview.dto';
 import { SubmitInterviewAnswerDto } from './dto/submit-interview-answers.dto';
@@ -31,14 +23,8 @@ export class InterviewController {
   }
 
   @Get('/activated/survey/:id')
-  findAllActivatedBySurveyId(
-    @Param('id') id: number,
-    @Query('status') filter: string[],
-  ) {
-    return this.interviewService.findAllActivatedBySurveyId(
-      +id,
-      filter.map(Number),
-    );
+  findAllActivatedBySurveyId(@Param('id') id: number, @Query('status') filter: string[]) {
+    return this.interviewService.findAllActivatedBySurveyId(+id, filter.map(Number));
   }
 
   @Post('/:id/submit-answers')

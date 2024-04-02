@@ -20,6 +20,7 @@ export class InterviewService {
 
   async create(createInterviewDto: CreateInterviewDto) {
     console.log(`Creating interview...`);
+    console.log(createInterviewDto);
     const { user_code, survey_id, place_id } = createInterviewDto;
     const user = await this.usersService.findUserByCode(user_code);
     const survey = await this.surveysService.findOne(survey_id);
@@ -55,13 +56,9 @@ export class InterviewService {
 
     for (const response of dto.responses) {
       // Create question response
-      console.log(`Creating question response...`, response);
-
       await this.questionResponseService.create({
+        ...response,
         interviewId,
-        questionId: response.questionId,
-        value: response.value,
-        userCode: response.userCode,
       });
     }
 

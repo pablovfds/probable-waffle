@@ -17,33 +17,49 @@ export class QuestionResponseService {
     });
     const question = await this.prisma.question.findUnique({
       where: {
-        id: +createInterviewDto.questionId,
+        id: +createInterviewDto.id,
       },
     });
-
+    const inserts = [];
     const isMultiSelectOrCheckbox =
       question.type === 'multiselect' ||
       question.type === 'checkbox' ||
-      question.type === 'topic';
+      question.type === 'topic' ||
+      question.type === 'sorted';
+    if (isMultiSelectOrCheckbox && Array.isArray(createInterviewDto.answer)) {
+      const alternatives = createInterviewDto.answer; // { id: 1, sequence: 1 }
 
-    let alternatives = [];
-    let value = null;
-    if (isMultiSelectOrCheckbox) {
-      alternatives = createInterviewDto.value.split(',');
+      alternatives.forEach((alt) => {
+        inserts.push(
+          this.prisma.questionResponse.create({
+            data: {
+              sequence: alt.sequence,
+              user: { connect: { id: user.id } },
+              alternatives: {
+                connect: { id: alt.id },
+              },
+              question: { connect: { id: question.id } },
+              interview: { connect: { id: createInterviewDto.interviewId } },
+            },
+          }),
+        );
+      });
     } else {
-      value = createInterviewDto.value;
+      if (typeof createInterviewDto.answer !== 'string') {
+        console.log('Answer is not a string');
+        return;
+      }
+      inserts.push(
+        this.prisma.questionResponse.create({
+          data: {
+            value: createInterviewDto.answer,
+            user: { connect: { id: user.id } },
+            question: { connect: { id: question.id } },
+            interview: { connect: { id: createInterviewDto.interviewId } },
+          },
+        }),
+      );
     }
-
-    return await this.prisma.questionResponse.create({
-      data: {
-        value: value,
-        user: { connect: { id: user.id } },
-        question: { connect: { id: question.id } },
-        alternatives: {
-          connect: alternatives.map((alt) => ({ id: +alt })),
-        },
-        interview: { connect: { id: createInterviewDto.interviewId } },
-      },
-    });
+    await this.prisma.$transaction(inserts);
   }
 }

@@ -1,7 +1,12 @@
 export class CreateQuestionResponseDto {
-  questionId: number;
+  id: number;
   interviewId: number;
   gridQuestionId?: number;
-  value: string;
+  answer: string | AlternativeResponse[];
   userCode: string;
+}
+
+export class AlternativeResponse {
+  id: number;
+  sequence?: number;
 }

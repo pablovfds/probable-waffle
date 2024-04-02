@@ -15,6 +15,7 @@ model User {
   id                 Int                @id @default(autoincrement())
   code               String             @unique
   name               String?
+  email              String?
   password           String?
   photo              String?
   surveyCount        Int                @default(0)
@@ -95,6 +96,7 @@ model Section {
   name      String?
   resume    String?
   surveyId  Int?
+  order     Int?
   survey    Survey?    @relation(fields: [surveyId], references: [id])
   questions Question[]
   deleted   Boolean?   @default(false)
@@ -112,6 +114,7 @@ model Question {
   required      Boolean?
   withAudio     Boolean?
   withDisk      Boolean?
+  order         Int?
   sectionId     Int?
   section       Section?                  @relation(fields: [sectionId], references: [id])
   responses     QuestionResponse[]
@@ -127,6 +130,7 @@ model Question {
 model Alternative {
   id                Int                       @id @default(autoincrement())
   value             String?
+  order             Int?
   questions         AlternativesOnQuestions[]
   questionResponses QuestionResponse[]
   deleted           Boolean?                  @default(false)
@@ -149,6 +153,7 @@ model AlternativesOnQuestions {
 model QuestionResponse {
   id           Int           @id @default(autoincrement())
   value        String?
+  sequence     Int?
   alternatives Alternative[]
   questionId   Int?
   question     Question?     @relation(fields: [questionId], references: [id])

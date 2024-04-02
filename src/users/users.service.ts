@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-
+import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 
@@ -36,15 +36,17 @@ export class UsersService {
   async createUser(body: CreateUserDto): Promise<User> {
     const { name, photo, password } = body;
 
-    return await this.prisma.user.create({
+    const user = await this.prisma.user.create({
       data: {
         name,
         code: this.generateRandomString(6),
-        password, // Add the 'password' property
+        password: await bcrypt.hash(password, 10), // Add the 'password' property
         photo,
         expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
       },
     });
+    user.password = undefined;
+    return user;
   }
 
   async addSurveyToUser(userCode: string, surveyId: number) {
